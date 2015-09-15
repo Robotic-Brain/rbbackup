@@ -1,0 +1,27 @@
+
+
+#lock target
+#lock remote
+
+#get last snapshot dir or use input
+#get last snapshot end time
+
+#note starttime
+TIME_START=`date +"%s"
+
+#package list
+ssh backup_runner@localhost 'pacman -Qqen | sort | gzip --best > nativeExplicit.txt.gz'
+ssh backup_runner@localhost 'pacman -Qqem | sort | gzip --best > foreignExplicit.txt.gz'
+#/usr md5s
+ssh backup_runner@localhost 'find -P -O3 /usr -xdev -type f -newermt 2015-09-07 -print0 | xargs -0 -n 1 openssl md5 | sort | gzip --best > diffUsrMd5.txt.gz'
+#rsync
+sudo rsync -s --delete-delay --partial --partial-dir=<PARTIALS> --numeric-ids -SaHAXcyy --temp-dir=<TEMP_DIR> --log-file=rsync.log --write-batch=<BATCH> --filter='. <FILTER_FILE>' --link-dest=<BAK_BASE> / /backup
+
+
+#note end time
+TIME_END=`date +"%s"
+#write snapshot info
+
+#unlock remote
+#mirrior to 2nd hdd
+#unlock target
