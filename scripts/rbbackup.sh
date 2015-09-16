@@ -166,13 +166,15 @@ function lock_target() {
 # args: <snapshot_path>
 function check_backup_structure() {
     echo "TODO: function: ${FUNCNAME[0]}"
-    return 1
+    false && conf_check_backup_structure_f $@
+    return $?
 }
 
 # args: <last_snapshot_path> <this_snapshot_path> <time_start> <time_end>
 function write_backup_info() {
     echo "TODO: function: ${FUNCNAME[0]}"
-    return 0
+    conf_write_backup_info_f $@
+    return $?
 }
 
 # args: <target> <reason> <dry> <quiet> <last_snap_path> <this_snap_path> <time_start>
@@ -207,6 +209,12 @@ conf_do_backup_f() {                     # 3) $opt_dryRun           # 1 if dry-r
 }                                        # 5) $l_last_snapshot      # path to last snapshot (without fs fragment)
 conf_post_backup_f() {                   # 6) $l_backup_files_path  # path to this snapshot (without fs fragment)
     return                               # 7) $l_time_start         # starttime of backup
+}
+conf_check_backup_structure_f() {        # 1) <snapshot_path_to_check>
+    return
+}
+conf_write_backup_info_f() {             # args: <last_snapshot_path> <this_snapshot_path> <time_start> <time_end>
+    return
 }
 
 ### Main script starts here
@@ -337,7 +345,8 @@ function main() {
     # get snapshot params:
     declare l_last_snapshot
     if [ $opt_initial -ne 0 ]; then
-	l_last_snapshot=`mktemp -d`
+	#l_last_snapshot=`mktemp -d`
+	l_last_snapshot=''
     else
 	if [ -r "$conf_backup_path/lastPath" ]; then
 	    l_last_snapshot=`cat $conf_backup_path/lastPath`
