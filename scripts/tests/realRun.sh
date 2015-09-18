@@ -2,51 +2,66 @@
 
 # This fixture tests a complete real run
 
-DIR="${BASH_SOURCE%/*}"; if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
-
 createConfiguration() {
+    local DIR="${BASH_SOURCE%/*}"; if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
     # First generate dummy configuration
-    # 1) <TMP>/gconf.conf
-    # 2) <TMP>/tconf
-    # 3) <TMP>/tconf/testRun.conf
-    # 4) <TMP>/destdir
-
+    # 1) <TMP>/gconf.conf          # global config (passed via -c)
+    # 2) <TMP>/tconf               # target config dir (set in global config)
+    # 3) <TMP>/tconf/testRun.conf  # test target config
+    # 4) <TMP>/destdir             # backup storage destination
+    
     # 0)
     TMP=`mktemp -d` || return 1
     echo "mktmp created directory: '$TMP'"
-
+    
     # 1)
     echo "conf_target_confdir='$TMP/tconf'" >> "$TMP/gconf.conf"
     
     # 2)
     mkdir -v "$TMP/tconf" || return 1
-
+    
     # 3)
     # Build substitution list
     local -A l_replaceMe=(
-	['H']='#'
-	['DEST_DIR']="$TMP/destdir"
-	['BACKUP_PATH']="$TMP/destdir/"`date +"%Y"`/`date +"%m"`/`date +"%d"`"/testing"
-	['FNCTAGS_0']=$RANDOM
-	['FNCTAGS_1']=$RANDOM
-#	['FNCTAGS_2']=$RANDOM
+	    ['H']='#'
+	    ['DEST_DIR']="$TMP/destdir"
+	    ['BACKUP_PATH']="$TMP/destdir/"`date +"%Y"`/`date +"%m"`/`date +"%d"`"/testing"
+	    ['FNCTAGS_0']=$RANDOM
+	    ['FNCTAGS_1']=$RANDOM
+	    ['FNCTAGS_2']=$RANDOM
     )
     local l_sedSubs=''
     for i in "${!l_replaceMe[@]}"
     do
-	l_sedSubs+="s:###$i###:${l_replaceMe[$i]}:g"$'\n'
+	    l_sedSubs+="s:###$i###:${l_replaceMe[$i]}:g"$'\n'
     done
     # replace tags and write to file (or exit when tags missing)
     cat "$DIR/templates/realRun/testRun.conf" | sed -r -e "$l_sedSubs" -e '/###[^#]+###/ q 1' > "$TMP/tconf/testRun.conf"
     if [ $? -ne 0 ]; then
-	echo "Missing substitution!"
-	tail -n1 "$TMP/tconf/testRun.conf"
-	return 1
+	    echo "Missing substitution!"
+	    tail -n1 "$TMP/tconf/testRun.conf"
+	    return 1
     fi
     echo "wrote config file: $TMP/tconf/testRun.conf"
-
+    
     # 4)
     mkdir -v "$TMP/destdir" || return 1
+}
+
+cleanupConfiguration() {
+    # Cleanup
+    rm -rvf "$TMP"
+}
+
+createExpectedStructure() {
+    local DIR="${BASH_SOURCE%/*}"; if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
+    echo "TODO: ${FUNCNAME[0]}" >&2
+    return
+}
+
+cleanupExpectedStructure() {
+    echo "TODO: ${FUNCNAME[0]}" >&2
+    return
 }
 
 runtests() {
@@ -84,27 +99,11 @@ runtests() {
     assertEquals "Empty destination" 0 $?
 }
 
-cleanupConfiguration() {
-    # Cleanup
-    rm -rvf "$TMP"
-    #echo "$destdir"
-    #echo "TARGET CONF"
-    #cat "$targetdir/localhost.conf"
-    #echo "OUT1"
-    #cat "$destdir/output/out1.log"
-    #echo "OUT2"
-    #cat "$destdir/output/out2.log"
-    #rm -rvf "$targetdir"
-    #rm -vf "$globconf"
-    #rm -rvf "$destdir"
-}
-
 testInitialRun() {
-    createConfiguration || fail "Setup failed!" || exit 1
-    echo "should not run!!!!!"
-    #createExpectedStructure
+    createConfiguration || fail "Config setup failed!" || exit 1
+    createExpectedStructure || fail "Dummy system setup failed!" || exit 1
     #runtests
-    #cleanupExpectedStructure
+    cleanupExpectedStructure
     cleanupConfiguration
 }
 
