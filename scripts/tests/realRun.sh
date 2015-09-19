@@ -2,8 +2,11 @@
 
 # This fixture tests a complete real run
 
+# All paths relative to this directory
+DIR="${BASH_SOURCE%/*}"; if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
+TMP=
+
 createConfiguration() {
-    local DIR="${BASH_SOURCE%/*}"; if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
     # First generate dummy configuration
     # 1) <TMP>/gconf.conf          # global config (passed via -c)
     # 2) <TMP>/tconf               # target config dir (set in global config)
@@ -53,17 +56,6 @@ cleanupConfiguration() {
     rm -rvf "$TMP"
 }
 
-createExpectedStructure() {
-    local DIR="${BASH_SOURCE%/*}"; if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
-    echo "TODO: ${FUNCNAME[0]}" >&2
-    return
-}
-
-cleanupExpectedStructure() {
-    echo "TODO: ${FUNCNAME[0]}" >&2
-    return
-}
-
 runtests() {
     # Actual test
     ./rbbackup.sh -ni -c "$globconf" localhost testing >"$destdir/output/out1.log" 2>"$destdir/output/out2.log"
@@ -101,9 +93,7 @@ runtests() {
 
 testInitialRun() {
     createConfiguration || fail "Config setup failed!" || exit 1
-    createExpectedStructure || fail "Dummy system setup failed!" || exit 1
     #runtests
-    cleanupExpectedStructure
     cleanupConfiguration
 }
 
