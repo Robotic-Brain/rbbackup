@@ -145,10 +145,10 @@ fi
 function log() {
     set +x
     if [ $opt_quiet -eq 0 ]; then
-	echo "$@"
+	    echo "$@"
     fi
     if [ $l_real_debug_mode -ne 0 ]; then
-	set -x
+	    set -x
     fi
 }
 
@@ -158,8 +158,8 @@ function lock_target() {
     exec 200>"$conf_backup_path/target.lck"
     flock -en 200
     if [ $? -ne 0 ]; then
-	echo "Failed to aquire lock. Backup in progress?" >&2
-	exit 2
+	    echo "Failed to aquire lock. Backup in progress?" >&2
+	    exit 2
     fi
 }
 
@@ -233,77 +233,77 @@ function main() {
     
     OPTIND=1
     while getopts ":nhqiVc:" l_opt; do
-	case $l_opt in
-	    n)
-		opt_dryRun=1
-		;;
-	    h)
-		opt_help=1
-		;;
-	    q)
-		opt_quiet=1
-		;;
-	    i)
-		opt_initial=1
-		;;
-	    V)
-		opt_version=1
-		;;
-	    c)
-		opt_config=$OPTARG
-		opt_config_set=1
-		;;
-	    :)
-		echo "SYNTAX: Required argument missing!" >&2
-		l_code=3
-		;;
-	    \?)
-		echo "SYNTAX: Unknown argument: " $OPTARG >&2
-		l_code=3
-		;;
-	    *)
-		echo "BUG: TODO CASE: " $OPTIND $OPTARG $l_opt >&2
-		;;
-	esac
+	    case $l_opt in
+	        n)
+		        opt_dryRun=1
+		        ;;
+	        h)
+		        opt_help=1
+		        ;;
+	        q)
+		        opt_quiet=1
+		        ;;
+	        i)
+		        opt_initial=1
+		        ;;
+	        V)
+		        opt_version=1
+		        ;;
+	        c)
+		        opt_config=$OPTARG
+		        opt_config_set=1
+		        ;;
+	        :)
+		        echo "SYNTAX: Required argument missing!" >&2
+		        l_code=3
+		        ;;
+	        \?)
+		        echo "SYNTAX: Unknown argument: " $OPTARG >&2
+		        l_code=3
+		        ;;
+	        *)
+		        echo "BUG: TODO CASE: " $OPTIND $OPTARG $l_opt >&2
+		        ;;
+	    esac
     done
     
     # if code != 0 show usage and exit
     if [ $l_code -ne 0 ]; then
-	usage
-	exit $l_code
+	    usage
+	    exit $l_code
     fi
     
     # if help or version flag set, disply information and exit
     l_exitNow=0
     if [ $opt_version -ne 0 ]; then
-	print_version
-	l_exitNow=1
+	    print_version
+	    l_exitNow=1
     fi
     if [ $opt_help -ne 0 ]; then
-	fullhelp
-	l_exitNow=1
+	    fullhelp
+	    l_exitNow=1
     fi
     if [ $l_exitNow -ne 0 ]; then
-	exit 0
+	    exit 0
     fi
     
     shift $(($OPTIND -1))
     
     # 1st non option argument is the target. 2nd is the reason
     if [ $# -gt 0 ]; then
-	opt_target=$1
-	if [ $# -gt 1 ]; then
-	    opt_reason=$2
-	fi
-	if [ $# -gt 2 ]; then
-	    echo "SYNTAX: Too many arguments!" >&2
+	    opt_target=$1
+	    if [ $# -gt 1 ]; then
+	        opt_reason=$2
+	    fi
+	    if [ $# -gt 2 ]; then
+	        echo "SYNTAX: Too many arguments!" >&2
+	        usage
+	        exit 3
+	    fi
+    else
+	    echo "SYNTAX: Required argument <target> missing!" >&2
 	    usage
 	    exit 3
-	fi
-    else
-	echo "SYNTAX: Required argument <target> missing!" >&2
-	usage
-	exit 3
     fi
     
     # Protect variables before sourcing configuration
@@ -312,15 +312,15 @@ function main() {
     # Source global configuration
     source $opt_config 2> /dev/null
     if [ $? -ne 0 ]; then
-	if [ $opt_config_set -eq 0 ]; then
-	    log "Failed loading default configuration file: $opt_config..."
-	    log "...Using defaults"
-	else
-	    echo "ERROR: Failed loading configuration file: $opt_config" >&2
-	    exit 1
-	fi
+	    if [ $opt_config_set -eq 0 ]; then
+	        log "Failed loading default configuration file: $opt_config..."
+	        log "...Using defaults"
+	    else
+	        echo "ERROR: Failed loading configuration file: $opt_config" >&2
+	        exit 1
+	    fi
     else
-	log "Loaded global configuration file: $opt_config"
+	    log "Loaded global configuration file: $opt_config"
     fi
     readonly conf_target_confdir
     
@@ -334,35 +334,35 @@ function main() {
     # Source target configuration
     source "$l_target_conf_file" 2> /dev/null
     if [ $? -ne 0 ]; then
-	echo "ERROR: Failed loading target configuration file: $l_target_conf_file" >&2
-	exit 1
+	    echo "ERROR: Failed loading target configuration file: $l_target_conf_file" >&2
+	    exit 1
     else
-	log "Loaded target configuration file: $l_target_conf_file"
+	    log "Loaded target configuration file: $l_target_conf_file"
     fi
-
+    
     lock_target
-
+    
     # get snapshot params:
     declare l_last_snapshot
     if [ $opt_initial -ne 0 ]; then
-	#l_last_snapshot=`mktemp -d`
-	l_last_snapshot=''
+	    #l_last_snapshot=`mktemp -d`
+	    l_last_snapshot=''
     else
-	if [ -r "$conf_backup_path/lastPath" ]; then
-	    l_last_snapshot=`cat $conf_backup_path/lastPath`
-	    if [ check_backup_structure "$l_last_snapshot" -ne 0 ]; then
-		echo "ERROR: $l_last_snapshot does not look like a backup!" >&2
-		exit 1
+	    if [ -r "$conf_backup_path/lastPath" ]; then
+	        l_last_snapshot=`cat $conf_backup_path/lastPath`
+	        if [ check_backup_structure "$l_last_snapshot" -ne 0 ]; then
+		        echo "ERROR: $l_last_snapshot does not look like a backup!" >&2
+		        exit 1
+	        fi
+	    else
+	        echo "ERROR: could not read last snapshot location! Try adding -i to start from scratch" >&2
+	        exit 1
 	    fi
-	else
-	    echo "ERROR: could not read last snapshot location! Try adding -i to start from scratch" >&2
-	    exit 1
-	fi
     fi
-
+    
     readonly l_last_snapshot
     readonly l_backup_files_path=`date +"$conf_backup_path/%Y/%m/%d/$opt_reason"`
-    log "Using $l_last_snapshot as base"
+    log "Using '${l_last_snapshot:-NONE}' as base"
     readonly l_time_start=`date +"%s"`
     pre_backup  "$opt_target" "$opt_reason" "$opt_dryRun" "$opt_quiet" "$l_last_snapshot" "$l_backup_files_path" "$l_time_start" || exit 1
     do_backup   "$opt_target" "$opt_reason" "$opt_dryRun" "$opt_quiet" "$l_last_snapshot" "$l_backup_files_path" "$l_time_start" || exit 1
