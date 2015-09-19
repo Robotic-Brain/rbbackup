@@ -12,6 +12,10 @@ createConfiguration() {
     # 2) <TMP>/tconf               # target config dir (set in global config)
     # 3) <TMP>/tconf/testRun.conf  # test target config
     # 4) <TMP>/destdir             # backup storage destination
+    # 5) <TMP>/srcdir              # populated by createExpectedStructure
+    # 6) <TMP>/output              # temporary output storage for later parsing
+    #    <TMP>/output/out*.log     # output files of command runs
+    # 7) <TMP>/output/check*.awk   # checks to run on files
     
     # 0)
     TMP=`mktemp -d` || return 1
@@ -53,6 +57,26 @@ createConfiguration() {
     
     # 4)
     mkdir -v "$TMP/destdir" | sed -r 's/.*/INFO: &/' || return 1
+
+    # 5)
+    cp -av "$DIR/templates/realRun/initialFS" "$TMP/srcdir" | sed -r 's/.*/INFO: &/' || return 1
+
+    # 6)
+    mkdir -v "$TMP/output" | sed -r 's/.*/INFO: &/' || return 1
+
+    # 7)
+    # replace tags and write to file (or exit when tags missing)
+    if [ ! -r "$DIR/templates/realRun/check1.awk" ]; then
+        fail "Missing template file: $DIR/templates/realRun/check1.awk"
+        return 1
+    fi
+    cat "$DIR/templates/realRun/check1.awk" | sed -r -e "$l_sedSubs" -e '/###[^#]+###/ q 1' > "$TMP/output/check1.awk"
+    if [ $? -ne 0 ]; then
+	    fail "Missing substitution!"
+	    tail -n1 "$TMP/output/check1.awk"
+	    return 1
+    fi
+    echo "INFO: wrote parsed awk script: $TMP/output/check1.awk"
 }
 
 cleanupConfiguration() {
@@ -62,43 +86,25 @@ cleanupConfiguration() {
 
 runtests() {
     # Actual test
-    ./rbbackup.sh -ni -c "$globconf" localhost testing >"$destdir/output/out1.log" 2>"$destdir/output/out2.log"
-    assertEquals "Exit code" 0 $?
-    grep "$globconf" <"$destdir/output/out1.log" | grep "global"
-    assertEquals "global config" 0 $?
-    grep "$targetdir/localhost.conf" <"$destdir/output/out1.log" | grep "target"
-    assertEquals "target config" 0 $?
+    ./rbbackup.sh -i -c "$TMP/gconf.conf" testRun testing >"$TMP/output/out1.log" 2>"$TMP/output/out2.log"
+    assertEquals "Exit code" 0 $?       # check exit == 0
+    grep "$TMP/gconf.conf" <"$TMP/output/out1.log" | grep "global" >/dev/null
+    assertEquals "global config" 0 $?   # check used global configuration
+    grep "$TMP/tconf/testRun.conf" <"$TMP/output/out1.log" | grep "target" >/dev/null
+    assertEquals "target config" 0 $?   # check used target configuration
     
-    cat "$destdir/output/out1.log" | awk '
-        BEGIN {seen=-1}
-        /'${FncTags[0]}'/ {
-            if (seen != -1) exit 1
-            seen++
-        }
-        /'${FncTags[1]}'/ {
-            if (seen != 0) exit 2
-            seen++
-        }
-        /'${FncTags[2]}'/ {
-            if (seen != 1) exit 3
-            seen++
-        }
-        END {
-            if (seen != 2) {
-                print "seen is:", seen
-                exit 4
-            }
-        }'
-    assertEquals "hook functions" 0 $?
-    assertTrue "Lock exists?" "[ -f $destdir/target.lck ]"
-    ls -l "$destdir" | wc -l | grep "3" >/dev/null
-    assertEquals "Empty destination" 0 $?
+    cat "$TMP/output/out1.log" | awk -f "$TMP/output/check1.awk"
+    assertEquals "hook functions" 0 $?  # check hooks were called in order
+    assertTrue "Lock exists?" "[ -f $TMP/destdir/target.lck ]"
+
+    #ls -l "$destdir" | wc -l | grep "3" >/dev/null
+    #assertEquals "Empty destination" 0 $?
 }
 
 testInitialRun() {
     createConfiguration || fail "Config setup failed!" || exit 1
-    #runtests
-    cleanupConfiguration
+    runtests
+    #cleanupConfiguration
 }
 
 
