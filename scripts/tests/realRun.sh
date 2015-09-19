@@ -15,13 +15,13 @@ createConfiguration() {
     
     # 0)
     TMP=`mktemp -d` || return 1
-    echo "mktmp created directory: '$TMP'"
+    echo "INFO: mktmp created directory: '$TMP'"
     
     # 1)
     echo "conf_target_confdir='$TMP/tconf'" >> "$TMP/gconf.conf"
     
     # 2)
-    mkdir -v "$TMP/tconf" || return 1
+    mkdir -v "$TMP/tconf" | sed -r 's/.*/INFO: &/' || return 1
     
     # 3)
     # Build substitution list
@@ -39,16 +39,20 @@ createConfiguration() {
 	    l_sedSubs+="s:###$i###:${l_replaceMe[$i]}:g"$'\n'
     done
     # replace tags and write to file (or exit when tags missing)
+    if [ ! -r "$DIR/templates/realRun/testRun.conf" ]; then
+        fail "Missing template file: $DIR/templates/realRun/testRun.conf"
+        return 1
+    fi
     cat "$DIR/templates/realRun/testRun.conf" | sed -r -e "$l_sedSubs" -e '/###[^#]+###/ q 1' > "$TMP/tconf/testRun.conf"
     if [ $? -ne 0 ]; then
-	    echo "Missing substitution!"
+	    fail "Missing substitution!"
 	    tail -n1 "$TMP/tconf/testRun.conf"
 	    return 1
     fi
-    echo "wrote config file: $TMP/tconf/testRun.conf"
+    echo "INFO: wrote parsed config file: $TMP/tconf/testRun.conf"
     
     # 4)
-    mkdir -v "$TMP/destdir" || return 1
+    mkdir -v "$TMP/destdir" | sed -r 's/.*/INFO: &/' || return 1
 }
 
 cleanupConfiguration() {
