@@ -12,7 +12,7 @@ createConfiguration() {
     # 2) <TMP>/tconf               # target config dir (set in global config)
     # 3) <TMP>/tconf/testRun.conf  # test target config
     # 4) <TMP>/destdir             # backup storage destination
-    # 5) <TMP>/srcdir              # populated by createExpectedStructure
+    # 5) <TMP>/srcdir              # populated by templates/initialFS
     # 6) <TMP>/output              # temporary output storage for later parsing
     #    <TMP>/output/out*.log     # output files of command runs
     # 7) <TMP>/output/check*.awk   # checks to run on files
@@ -97,8 +97,15 @@ runtests() {
     assertEquals "hook functions" 0 $?  # check hooks were called in order
     assertTrue "Lock exists?" "[ -f $TMP/destdir/target.lck ]"
 
-    #ls -l "$destdir" | wc -l | grep "3" >/dev/null
-    #assertEquals "Empty destination" 0 $?
+    # compare directory structure and permissions
+    ls -lARn --full-time "$TMP/srcdir" > "$TMP/output/ls1.log" || fail "Ls 1 failed"
+    ls -lARn --full-time "$TMP/destdir/"`date +"%Y"`/`date +"%m"`/`date +"%d"`"/testing" > "$TMP/output/ls2.log" || fail "Ls 2 failed"
+    diff -qN "$TMP/output/ls1.log" "$TMP/output/ls2.log" >/dev/null
+    assertEquals "Backup structure" 0 $?
+    
+    # compare file contents
+    diff -qrN "$TMP/srcdir" "$TMP/destdir/"`date +"%Y"`/`date +"%m"`/`date +"%d"`"/testing" >/dev/null
+    assertEquals "Backup contents" 0 $?
 }
 
 testInitialRun() {
