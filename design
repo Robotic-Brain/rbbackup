@@ -25,3 +25,15 @@ TIME_END=`date +"%s"
 #unlock remote
 #mirrior to 2nd hdd
 #unlock target
+
+### directory layout
+/backups/<target>/snapshots/YYYY/MM/DD/<reason>/fs/        # <- Backup files here
+/backups/<target>/snapshots/YYYY/MM/DD/<reason>/usedConfig.txt
+/backups/<target>/snapshots/YYYY/MM/DD/<reason>/info.txt   # Snapshot information
+/backups/<target>/snapshots/YYYY/MM/DD/<reason>/batch.sh   # Rsync batch
+/backups/<target>/snapshots/YYYY/MM/DD/<reason>/rsync.log.gz
+/backups/<target>/target.lck                               # Lockfile
+/backups/<target>/filter.txt
+/backups/<target>/lastSnapshot/                # Symlink to last snapshot
+/backups/<target>/temp/
+/backups/<target>/partial/
