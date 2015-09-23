@@ -9,7 +9,7 @@ DIR="${BASH_SOURCE%/*}"; if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi; DIR=`readlin
 TMP=
 
 # Template root
-TEMPLATE="$DIR/templates/realRun2"
+TEMPLATE="$DIR/templates/realRun"
 
 # Timestamp info
 declare -a TIME=(`date +"%Y"` `date +"%m"` `date +"%d"`)
