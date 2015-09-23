@@ -16,6 +16,9 @@ declare -a TIME=(`date +"%Y"` `date +"%m"` `date +"%d"`)
 
 createConfiguration() {
     TMP=`mktemp -d` || return 1
+    if [ $DBG_OPEN_TMP -ne 0 ]; then
+        xdg-open "$TMP"
+    fi
     echo "INFO: mktmp created directory: '$TMP'"
 
     # Build substitution list
@@ -62,7 +65,9 @@ createConfiguration() {
 
 cleanupConfiguration() {
     # Cleanup
-    rm -rvf "$TMP"
+    if [ $DBG_OPEN_TMP -eq 0 ]; then
+        rm -rvf "$TMP"
+    fi
 }
 
 runtests() {
@@ -92,7 +97,7 @@ runtests() {
 testInitialRun() {
     createConfiguration || fail "Config setup failed!" || exit 1
     runtests
-    #cleanupConfiguration
+    cleanupConfiguration
 }
 
 

@@ -15,5 +15,5 @@ else
     echo "No fixture given!"
     echo "available fixtures:"
     cd ./tests/
-    find . -type f ! -name '*~'
+    find . -type f ! -name '*~' ! -path './templates/*'
 fi
