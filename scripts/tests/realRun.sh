@@ -15,8 +15,15 @@ TEMPLATE="$DIR/templates/realRun"
 declare -a TIME=(`date +"%Y"` `date +"%m"` `date +"%d"`)
 
 createConfiguration() {
+    # Magic var: DBG_OPEN_TMP
+    #            set to 1 to prevent deletion of <TMP> and open in Thunar
+    # Magic folders:
+    # <TMP>/output     # temporary stdout and stderr for later parsing
+    # <TMP>/destdir    # backup storage destination root
+    # <TMP>/parsed     # almost exact copy of <TEMPLATE> dir (see substitutions below)
+    
     TMP=`mktemp -d` || return 1
-    if [ $DBG_OPEN_TMP -ne 0 ]; then
+    if [ "$DBG_OPEN_TMP" -ne 0 ]; then
         xdg-open "$TMP"
     fi
     echo "INFO: mktmp created directory: '$TMP'"
@@ -24,7 +31,7 @@ createConfiguration() {
     # Build substitution list
     local -A l_replaceMe=(
 	    ['H']='#'
-	    ['DEST_DIR']="$TMP/destdir"
+	    ['TARGET_ROOT_PATH']="$TMP/destdir"
 	    ['BACKUP_PATH']="$TMP/destdir/${TIME[0]}/${TIME[1]}/${TIME[2]}/testing"
 	    ['FNCTAGS_0']=$RANDOM
 	    ['FNCTAGS_1']=$RANDOM
@@ -67,7 +74,7 @@ createConfiguration() {
 
 cleanupConfiguration() {
     # Cleanup
-    if [ $DBG_OPEN_TMP -eq 0 ]; then
+    if [ "$DBG_OPEN_TMP" -eq 0 ]; then
         rm -rvf "$TMP" | sed -r 's/.*/INFO: &/'
     fi
 }
