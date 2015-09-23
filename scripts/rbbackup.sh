@@ -63,7 +63,7 @@ Options:
     <reason>
           Backup reason defaults to 'daily'
               The given <reason> is included in the backup path.
-              Backups are saved in '$backup_dst/$target/%Y/%m/%d/<reason>'
+              Backups are saved in '<conf_backup_path>/<YYYY>/<MM>/<DD>/<reason>'
 
 Configuration:
     General
@@ -99,7 +99,7 @@ Variables:
         Its meaning changes between the global and target
           specific configuration files.
         Global: This path gets postfixed with the target name
-                eg.: $conf_backup_path/<target>
+                eg.: <conf_backup_path>/<target>
         Target: Before sourcing the target configuration, this
                   is already populated with the above value and
                   will not be changed again.
