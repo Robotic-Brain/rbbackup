@@ -29,7 +29,8 @@ createConfiguration() {
 	    ['FNCTAGS_0']=$RANDOM
 	    ['FNCTAGS_1']=$RANDOM
 	    ['FNCTAGS_2']=$RANDOM
-        ['TEMPLATE_ROOT']="$TEMPLATE"
+        ['TMP']="$TMP"
+        ['PARSED_ROOT']="$TMP/parsed"
         ['RANDOM']=$RANDOM
     )
     local l_sedSubs=''
