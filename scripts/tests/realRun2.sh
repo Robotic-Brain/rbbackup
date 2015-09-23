@@ -67,7 +67,7 @@ createConfiguration() {
 cleanupConfiguration() {
     # Cleanup
     if [ $DBG_OPEN_TMP -eq 0 ]; then
-        rm -rvf "$TMP"
+        rm -rvf "$TMP" | sed -r 's/.*/INFO: &/'
     fi
 }
 
@@ -85,14 +85,17 @@ runtests() {
     assertTrue "Lock exists?" "[ -f $TMP/destdir/target.lck ]"
 
     # compare directory structure and permissions
-    ls -lARn --full-time "$TMP/parsed/target_live" > "$TMP/output/ls1.log" || fail "Ls 1 failed"
-    ls -lARn --full-time "$TMP/destdir/${TIME[0]}/${TIME[1]}/${TIME[2]}/testing" > "$TMP/output/ls2.log" || fail "Ls 2 failed"
+    ls -lARn --time-style=+ "$TMP/parsed/target_live" | grep -v "$TMP" > "$TMP/output/ls1.log" || fail "Ls 1 failed"
+    ls -lARn --time-style=+ "$TMP/destdir/${TIME[0]}/${TIME[1]}/${TIME[2]}/testing/fs" | grep -v "$TMP" > "$TMP/output/ls2.log" || fail "Ls 2 failed"
     diff -qN "$TMP/output/ls1.log" "$TMP/output/ls2.log" >/dev/null
     assertEquals "Backup structure" 0 $?
     
     # compare file contents
-    diff -qrN "$TMP/parsed/target_live" "$TMP/destdir/${TIME[0]}/${TIME[1]}/${TIME[2]}/testing" >/dev/null
+    diff -qrN "$TMP/parsed/target_live" "$TMP/destdir/${TIME[0]}/${TIME[1]}/${TIME[2]}/testing/fs" >/dev/null
     assertEquals "Backup contents" 0 $?
+
+    # check snapshot info file
+    # TODO
 }
 
 testInitialRun() {
