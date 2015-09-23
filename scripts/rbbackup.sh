@@ -63,7 +63,7 @@ Options:
     <reason>
           Backup reason defaults to 'daily'
               The given <reason> is included in the backup path.
-              Backups are saved in '$backup_dst/$target/%Y/%m/%d/<reason>'
+              Backups are saved in '<conf_backup_path>/<YYYY>/<MM>/<DD>/<reason>'
 
 Configuration:
     General
@@ -99,12 +99,16 @@ Variables:
         Its meaning changes between the global and target
           specific configuration files.
         Global: This path gets postfixed with the target name
-                eg.: $conf_backup_path/<target>
+                eg.: <conf_backup_path>/<target>
         Target: Before sourcing the target configuration, this
                   is already populated with the above value and
                   will not be changed again.
                 This means you can choose your own backup root,
                   depending on target name.
+
+    conf_rsync_source
+        This is exactly the source passed to rsync,
+          and can be anything rsync expects
 
     opt_dryRun (READONLY)
         1 if -n was specified. 0 otherwise.
@@ -170,31 +174,38 @@ function check_backup_structure() {
     return $?
 }
 
-# args: <last_snapshot_path> <this_snapshot_path> <time_start> <time_end>
+# args: <last_snapshot_path> <this_snapshot_path> <time_start> <time_end> <target_root>
 function write_backup_info() {
     echo "TODO: function: ${FUNCNAME[0]}"
     conf_write_backup_info_f $@
     return $?
 }
 
-# args: <target> <reason> <dry> <quiet> <last_snap_path> <this_snap_path> <time_start>
+# args: <target> <reason> <dry> <quiet> <last_snap_path> <this_snap_path> <time_start> <target_root>
 function pre_backup() {
-    echo "TODO: function: ${FUNCNAME[0]}"
+    local l_params='-p'
+    if [ $opt_quiet -eq 0 ]; then
+        l_params+='v'
+    fi
+    mkdir "$l_params" "$6" || return 1
+    mkdir "$l_params" "$8/temp" || return 1
     conf_pre_backup_f $@
     return $?
 }
 
-# args: <target> <reason> <dry> <quiet> <last_snap_path> <this_snap_path> <time_start>
+# args: <target> <reason> <dry> <quiet> <last_snap_path> <this_snap_path> <time_start> <target_root>
 function do_backup() {
     echo "TODO: function: ${FUNCNAME[0]}"
     conf_do_backup_f $@
+    rsync -s --delete-delay --partial --partial-dir="$8/partial" --numeric-ids -SaHAXcyy --temp-dir="$8/temp" --log-file="$6/rsync.log" --write-batch="$6/rsbatch" --filter='. '"$conf_rsync_filter" --link-dest="$5" "$conf_rsync_source" "$6/fs"
     return $?
 }
 
-# args: <target> <reason> <dry> <quiet> <last_snap_path> <this_snap_path> <time_start>
+# args: <target> <reason> <dry> <quiet> <last_snap_path> <this_snap_path> <time_start> <target_root>
 function post_backup() {
     echo "TODO: function: ${FUNCNAME[0]}"
     conf_post_backup_f $@
+    gzip --best "$6/rsync.log"
     return $?
 }
 
@@ -209,11 +220,12 @@ conf_do_backup_f() {                     # 3) $opt_dryRun           # 1 if dry-r
 }                                        # 5) $l_last_snapshot      # path to last snapshot (without fs fragment)
 conf_post_backup_f() {                   # 6) $l_backup_files_path  # path to this snapshot (without fs fragment)
     return                               # 7) $l_time_start         # starttime of backup
-}
+}                                        # 8) $conf_backup_path     # target root location
+
 conf_check_backup_structure_f() {        # 1) <snapshot_path_to_check>
     return
 }
-conf_write_backup_info_f() {             # args: <last_snapshot_path> <this_snapshot_path> <time_start> <time_end>
+conf_write_backup_info_f() {             # args: <last_snapshot_path> <this_snapshot_path> <time_start> <time_end> <target_root>
     return
 }
 
@@ -330,7 +342,7 @@ function main() {
     
     log "Loading configuration for target: $opt_target"
     l_target_conf_file="$conf_target_confdir/$opt_target.conf"
-    
+
     # Source target configuration
     source "$l_target_conf_file" 2> /dev/null
     if [ $? -ne 0 ]; then
@@ -339,14 +351,25 @@ function main() {
     else
 	    log "Loaded target configuration file: $l_target_conf_file"
     fi
+
+    # Check if rsync source was specified
+    if [ -z "$conf_rsync_source" ]; then
+        echo "ERROR: No rsync source specified! (Set with 'conf_rsync_source')" >&2
+        exit 2
+    fi
+    # Check if rsync filter was specified
+    if [ ! -r "$conf_rsync_filter" ]; then
+        echo "ERROR: Rsync filter not specified or not readable! (Set with 'conf_rsync_filter')" >&2
+        exit 2
+    fi
     
     lock_target
     
     # get snapshot params:
     declare l_last_snapshot
     if [ $opt_initial -ne 0 ]; then
-	    #l_last_snapshot=`mktemp -d`
-	    l_last_snapshot=''
+	    l_last_snapshot=`mktemp -d`
+	    #l_last_snapshot=''
     else
 	    if [ -r "$conf_backup_path/lastPath" ]; then
 	        l_last_snapshot=`cat $conf_backup_path/lastPath`
@@ -364,10 +387,11 @@ function main() {
     readonly l_backup_files_path=`date +"$conf_backup_path/%Y/%m/%d/$opt_reason"`
     log "Using '${l_last_snapshot:-NONE}' as base"
     readonly l_time_start=`date +"%s"`
-    pre_backup  "$opt_target" "$opt_reason" "$opt_dryRun" "$opt_quiet" "$l_last_snapshot" "$l_backup_files_path" "$l_time_start" || exit 1
-    do_backup   "$opt_target" "$opt_reason" "$opt_dryRun" "$opt_quiet" "$l_last_snapshot" "$l_backup_files_path" "$l_time_start" || exit 1
-    post_backup "$opt_target" "$opt_reason" "$opt_dryRun" "$opt_quiet" "$l_last_snapshot" "$l_backup_files_path" "$l_time_start" || exit 1
+    pre_backup  "$opt_target" "$opt_reason" "$opt_dryRun" "$opt_quiet" "$l_last_snapshot" "$l_backup_files_path" "$l_time_start" "$conf_backup_path" || exit 1
+    do_backup   "$opt_target" "$opt_reason" "$opt_dryRun" "$opt_quiet" "$l_last_snapshot" "$l_backup_files_path" "$l_time_start" "$conf_backup_path" || exit 1
+    post_backup "$opt_target" "$opt_reason" "$opt_dryRun" "$opt_quiet" "$l_last_snapshot" "$l_backup_files_path" "$l_time_start" "$conf_backup_path" || exit 1
     readonly l_time_end=`date +"%s"`
-    write_backup_info "$l_last_snapshot" "$l_backup_files_path" "$l_time_start" "$l_time_end"
+    write_backup_info "$l_last_snapshot" "$l_backup_files_path" "$l_time_start" "$l_time_end" "$conf_backup_path"
+    log "Backup done."
 }
 main $@
