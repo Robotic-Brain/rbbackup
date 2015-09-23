@@ -84,6 +84,9 @@ runtests() {
     assertEquals "hook functions" 0 $?  # check hooks were called in order
     assertTrue "Lock exists?" "[ -f $TMP/destdir/target.lck ]"
 
+    # remove excluded files from pattern before comparing
+    rm -rvf "$TMP/parsed/target_live/exclude_me" | sed -r 's/.*/INFO: &/'
+    
     # compare directory structure and permissions
     ls -lARn --time-style=+ "$TMP/parsed/target_live" | grep -v "$TMP" > "$TMP/output/ls1.log" || fail "Ls 1 failed"
     ls -lARn --time-style=+ "$TMP/destdir/${TIME[0]}/${TIME[1]}/${TIME[2]}/testing/fs" | grep -v "$TMP" > "$TMP/output/ls2.log" || fail "Ls 2 failed"
