@@ -32,6 +32,7 @@ createConfiguration() {
         ['TMP']="$TMP"
         ['PARSED_ROOT']="$TMP/parsed"
         ['RANDOM']=$RANDOM
+        ['START_TIME']=`date +"%s" | head -c -3`
     )
     local l_sedSubs=''
     for i in "${!l_replaceMe[@]}"
@@ -75,6 +76,8 @@ runtests() {
     # Actual test
     ./rbbackup.sh -i -c "$TMP/parsed/config/rbbackup.conf" testRun testing >"$TMP/output/out1.log" 2>"$TMP/output/out2.log"
     assertEquals "Exit code" 0 $?       # check exit == 0
+    tail -n1 "$TMP/output/out1.log" | grep -i "done" >/dev/null
+    assertEquals "last line contains 'Done'" 0 $? # check that it ran till the end
     grep "$TMP/parsed/config/rbbackup.conf" <"$TMP/output/out1.log" | grep "global" >/dev/null
     assertEquals "global config" 0 $?   # check used global configuration
     grep "$TMP/parsed/config/targets/testRun.conf" <"$TMP/output/out1.log" | grep "target" >/dev/null
