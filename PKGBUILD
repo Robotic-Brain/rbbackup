@@ -45,10 +45,10 @@ check() {
 package() {
 	cd "$srcdir/${pkgname%-git}"
 	mkdir -p "$pkgdir/usr/bin"
-    mkdir -p "$pkgdir/etc"
+	mkdir -p "$pkgdir/etc"
 	cp "scripts/rbbackup.sh" "$pkgdir/usr/bin/rbbackup"
 	cp "config/rbbackup.conf" "$pkgdir/etc/"
-    cd "config/rbbackup.d"
-    find . -type d -exec mkdir -p "$pkgdir/etc/rbbackup.d/{}" \;
-    find . -type f -exec cp "{}" "$pkgdir/etc/rbbackup.d" \;
+	cd "config/rbbackup.d"
+	find . -type d -exec mkdir -p "$pkgdir/etc/rbbackup.d/{}" \;
+	find . -type f -exec cp "{}" "$pkgdir/etc/rbbackup.d" \;
 }
