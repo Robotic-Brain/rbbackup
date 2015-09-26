@@ -9,9 +9,10 @@ DIR="${BASH_SOURCE%/*}"; if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi; DIR=`readlin
 TMP=
 
 # Template root
-TEMPLATE="$DIR/templates/realRun"
+TEMPLATE="$DIR/templates/2ndRun"
 
 # Timestamp info
+declare -a LASTTIME=('2015' '09' '20')
 declare -a TIME=(`date +"%Y"` `date +"%m"` `date +"%d"`)
 
 createConfiguration() {
@@ -33,6 +34,7 @@ createConfiguration() {
 	    ['H']='#'
 	    ['TARGET_ROOT_PATH']="$TMP/destdir"
 	    ['BACKUP_PATH']="$TMP/destdir/${TIME[0]}/${TIME[1]}/${TIME[2]}/testing"
+        ['LAST_SNAPSHOT_PATH']="$TMP/destdir/${LASTTIME[0]}/${LASTTIME[1]}/${LASTTIME[2]}/testing"
 	    ['FNCTAGS_0']=$RANDOM
 	    ['FNCTAGS_1']=$RANDOM
 	    ['FNCTAGS_2']=$RANDOM
@@ -70,6 +72,10 @@ createConfiguration() {
 
     mkdir -v "$TMP/destdir" | sed -r 's/.*/INFO: &/' || return 1
     mkdir -v "$TMP/output" | sed -r 's/.*/INFO: &/' || return 1
+
+    # Copy base snapshot to destdir
+    cp -av "$TEMPLATE/base_snapshot/2015" "$TMP/destdir/" | sed -r 's/.*/INFO: &/' || return 1
+    echo "$TMP/destdir/${LASTTIME[0]}/${LASTTIME[1]}/${LASTTIME[2]}/testing" > "$TMP/destdir/lastPath" || return 1
 }
 
 cleanupConfiguration() {
@@ -81,7 +87,7 @@ cleanupConfiguration() {
 
 runtests() {
     # Actual test
-    ./rbbackup.sh -i -c "$TMP/parsed/config/rbbackup.conf" testRun testing >"$TMP/output/out1.log" 2>"$TMP/output/out2.log"
+    ./rbbackup.sh -c "$TMP/parsed/config/rbbackup.conf" testRun testing >"$TMP/output/out1.log" 2>"$TMP/output/out2.log"
     assertEquals "Exit code" 0 $?       # check exit == 0
     tail -n1 "$TMP/output/out1.log" | grep -i "done" >/dev/null
     assertEquals "last line contains 'Done'" 0 $? # check that it ran till the end
@@ -91,7 +97,7 @@ runtests() {
     assertEquals "target config" 0 $?   # check used target configuration
 
     # check base snapshot
-    grep "NONE" <"$TMP/output/out1.log" | grep "base" >/dev/null
+    grep "$TMP/destdir/${LASTTIME[0]}/${LASTTIME[1]}/${LASTTIME[2]}/testing" <"$TMP/output/out1.log" | grep "base" >/dev/null
     assertEquals "base snapshot" 0 $?   # check used base snapshot
     
     cat "$TMP/output/out1.log" | awk -f "$TMP/parsed/testSupport/check1.awk"
@@ -111,6 +117,16 @@ runtests() {
     diff -qrN "$TMP/parsed/target_live" "$TMP/destdir/${TIME[0]}/${TIME[1]}/${TIME[2]}/testing/fs" >/dev/null
     assertEquals "Backup contents" 0 $?
 
+    # check unmodified base snapshot
+    ls -lARn --time-style=+ "$TEMPLATE/base_snapshot/${LASTTIME[0]}/${LASTTIME[1]}/${LASTTIME[2]}/testing" | grep -ve '^total' | grep -v "$TEMPLATE" | awk '{$5=""; print}' > "$TMP/output/ls3.log" || fail "Ls 3 failed"
+    ls -lARn --time-style=+ "$TMP/destdir/${LASTTIME[0]}/${LASTTIME[1]}/${LASTTIME[2]}/testing" | grep -ve '^total' | grep -v "$TMP" | awk '{$5=""; print}' > "$TMP/output/ls4.log" || fail "Ls 4 failed"
+    diff -qN "$TMP/output/ls3.log" "$TMP/output/ls4.log" >/dev/null
+    assertEquals "Base Backup structure" 0 $?
+    
+    # compare file contents
+    diff -qrN "$TEMPLATE/base_snapshot/${LASTTIME[0]}/${LASTTIME[1]}/${LASTTIME[2]}/testing" "$TMP/destdir/${LASTTIME[0]}/${LASTTIME[1]}/${LASTTIME[2]}/testing" >/dev/null
+    assertEquals "Base Backup contents" 0 $?
+    
     # check snapshot info file
     # TODO
 }
