@@ -197,7 +197,16 @@ function pre_backup() {
 function do_backup() {
     echo "TODO: function: ${FUNCNAME[0]}"
     conf_do_backup_f $@
-    rsync -s --delete-delay --partial --partial-dir="$8/partial" --numeric-ids -SaHAXcyy --temp-dir="$8/temp" --log-file="$6/rsync.log" --write-batch="$6/rsbatch" --filter='. '"$conf_rsync_filter" --link-dest="$5" "$conf_rsync_source" "$6/fs"
+    local l_rsync='rsync'
+    if [ $3 -ne 0 ]; then  # add 'nvi' flags on dry run
+        l_rsync+=' -ni'
+        if [ $4 -eq 0 ]; then
+            l_rsync+='v'
+        fi
+    else
+        l_rsync+=' --log-file='"$6/rsync.log"
+    fi
+    $l_rsync -s --delete-delay --partial --partial-dir="$8/partial" --numeric-ids -SaHAXcyy --temp-dir="$8/temp" --write-batch="$6/rsbatch" --filter='. '"$conf_rsync_filter" --link-dest="$5" "$conf_rsync_source" "$6/fs"
     return $?
 }
 
@@ -205,7 +214,9 @@ function do_backup() {
 function post_backup() {
     echo "TODO: function: ${FUNCNAME[0]}"
     conf_post_backup_f $@
-    gzip --best "$6/rsync.log"
+    if [ $3 -eq 0 ]; then
+        gzip --best "$6/rsync.log"
+    fi
     return $?
 }
 
