@@ -128,7 +128,16 @@ runtests() {
     assertEquals "Base Backup contents" 0 $?
     
     # check snapshot info file
-    # TODO
+    cat "$TMP/destdir/${TIME[0]}/${TIME[1]}/${TIME[2]}/testing/info.txt" | grep -e '^start_time: [0-9]*' | grep "$TUNC_TIME" >/dev/null
+    assertEquals "snapshot info: start_time" 0 $?
+    cat "$TMP/destdir/${TIME[0]}/${TIME[1]}/${TIME[2]}/testing/info.txt" | grep -e '^end_time: [0-9]*' >/dev/null
+    assertEquals "snapshot info: end_time" 0 $?
+    cat "$TMP/destdir/${TIME[0]}/${TIME[1]}/${TIME[2]}/testing/info.txt" | grep -e '^base:' | grep "'$TMP/destdir/${LASTTIME[0]}/${LASTTIME[1]}/${LASTTIME[2]}/testing'" >/dev/null
+    assertEquals "snapshot info: base" 0 $?
+
+    # check lastPath file
+    cat "$TMP/destdir/lastPath" | grep -e '^'"$TMP/destdir/${TIME[0]}/${TIME[1]}/${TIME[2]}/testing"'$' >/dev/null
+    assertEquals "Last path writen" 0 $?
 }
 
 testInitialRun() {
