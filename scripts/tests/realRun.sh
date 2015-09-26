@@ -13,6 +13,7 @@ TEMPLATE="$DIR/templates/realRun"
 
 # Timestamp info
 declare -a TIME=(`date +"%Y"` `date +"%m"` `date +"%d"`)
+declare TUNC_TIME=`date +"%s" | head -c -3`
 
 createConfiguration() {
     # Magic var: DBG_OPEN_TMP
@@ -39,7 +40,7 @@ createConfiguration() {
         ['TMP']="$TMP"
         ['PARSED_ROOT']="$TMP/parsed"
         ['RANDOM']=$RANDOM
-        ['START_TIME']=`date +"%s" | head -c -3`
+        ['START_TIME']=$TUNC_TIME
     )
     local l_sedSubs=''
     for i in "${!l_replaceMe[@]}"
@@ -108,7 +109,14 @@ runtests() {
     assertEquals "Backup contents" 0 $?
 
     # check snapshot info file
-    # TODO
+    cat "$TMP/destdir/${TIME[0]}/${TIME[1]}/${TIME[2]}/testing/info.txt" | grep -e '^start_time: [0-9]*' | grep "$TUNC_TIME"
+    assertEquals "snapshot info: start_time" 0 $?
+    cat "$TMP/destdir/${TIME[0]}/${TIME[1]}/${TIME[2]}/testing/info.txt" | grep -e '^end_time: [0-9]*'
+    assertEquals "snapshot info: end_time" 0 $?
+
+    # check lastPath file
+    cat "$TMP/destdir/lastPath" | grep -e '^'"$TMP/destdir/${TIME[0]}/${TIME[1]}/${TIME[2]}/testing"'$'
+    assertEquals "Last path writen" 0 $?
 }
 
 testInitialRun() {
