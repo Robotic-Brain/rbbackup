@@ -23,7 +23,7 @@ createConfiguration() {
     # <TMP>/parsed     # almost exact copy of <TEMPLATE> dir (see substitutions below)
     
     TMP=`mktemp -d` || return 1
-    if [ "$DBG_OPEN_TMP" -ne 0 ]; then
+    if [ ${DBG_OPEN_TMP:-0} -ne 0 ]; then
         xdg-open "$TMP"
     fi
     echo "INFO: mktmp created directory: '$TMP'"
@@ -78,7 +78,7 @@ createConfiguration() {
 
 cleanupConfiguration() {
     # Cleanup
-    if [ "$DBG_OPEN_TMP" -eq 0 ]; then
+    if [ ${DBG_OPEN_TMP:-0} -eq 0 ]; then
         rm -rvf "$TMP" | sed -r 's/.*/INFO: &/'
     fi
 }
