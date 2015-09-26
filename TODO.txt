@@ -1,0 +1,3 @@
+Write snapshot info file
+check for snapshot info file in test suite
+Make dry run actually work
