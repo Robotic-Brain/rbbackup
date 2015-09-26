@@ -29,10 +29,8 @@ md5sums=('SKIP')
 
 pkgver() {
 	cd "$srcdir/${pkgname%-git}"
-    # TODO: Automatically use tags when available
-    #local _ver=
-	#printf "%s" "$(git describe --long | sed 's/\([^-]*-\)g/r\1/;s/-/./g')"
-	printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+	# TODO: Use alternate method if no tags are available
+	printf "%s" "$(git describe --long --first-parent | sed 's/\([^-]*-\)g/r\1/;s/-/./g')"
 }
 
 check() {
