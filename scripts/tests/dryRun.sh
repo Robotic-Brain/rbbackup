@@ -70,6 +70,10 @@ createConfiguration() {
 
     mkdir -v "$TMP/destdir" | sed -r 's/.*/INFO: &/' || return 1
     mkdir -v "$TMP/output" | sed -r 's/.*/INFO: &/' || return 1
+
+    # dummy last path
+    echo "DUMMY PATH" > "$TMP/output/dummyPath"
+    cp "$TMP/output/dummyPath" "$TMP/destdir/lastPath"
 }
 
 cleanupConfiguration() {
@@ -98,6 +102,10 @@ runtests() {
     ls -lARn "$TMP/destdir/${TIME[0]}/${TIME[1]}/${TIME[2]}/testing" | grep -v "$TMP" > "$TMP/output/ls2.log" || fail "Ls 2 failed"
     cat "$TMP/output/ls2.log" | wc -l | grep -e '^1$' >/dev/null
     assertEquals "Backup structure" 0 $?
+
+    # check that lastPath did not change
+    diff -qN "$TMP/output/dummyPath" "$TMP/destdir/lastPath" >/dev/null
+    assertEquals "LastPath modified" 0 $?
 }
 
 testInitialRun() {

@@ -179,13 +179,13 @@ function check_backup_structure() {
 # args: <last_snapshot_path> <this_snapshot_path> <time_start> <time_end> <target_root>
 function write_backup_info() {
     log "Writing '$2/info.txt'"
-    echo "
+    [ $opt_dryRun -eq 0 ] && echo "
 start_time: $3
 end_time: $4
 base: '$1'
 " > "$2/info.txt"
     log "Updating lastPath..."
-    echo "$2" > "$5/lastPath"
+    [ $opt_dryRun -eq 0 ] && echo "$2" > "$5/lastPath"
     conf_write_backup_info_f $@
     return $?
 }
