@@ -1,0 +1,12 @@
+- /bin
+- /dev/*
+- /lib*
+- /media/*
+- /mnt/*
+- /sbin
+- /tmp/*
+- /run/*
+- /proc/*
+- /sys/*
+- /lost+found
+- /usr

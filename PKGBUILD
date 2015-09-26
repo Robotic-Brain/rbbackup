@@ -23,7 +23,7 @@ replaces=()
 backup=()
 options=()
 install=
-source=('FOLDER::VCS+URL#FRAGMENT')
+source=("git+https://github.com/Robotic-Brain/rbbackup.git")
 noextract=()
 md5sums=('SKIP')
 
@@ -35,15 +35,19 @@ pkgver() {
 check() {
 	cd "$srcdir/${pkgname%-git}"
 	cd scripts
-	./testRunner.sh realRun.sh
-	./testRunner.sh dryRun.sh
-	./testRunner.sh 2ndRun.sh
-	./testRunner.sh argument_validation.sh
+	./testRunner.sh realRun.sh >/dev/null
+	./testRunner.sh dryRun.sh >/dev/null
+	./testRunner.sh 2ndRun.sh >/dev/null
+	./testRunner.sh argument_validation.sh >/dev/null
 }
 
 package() {
 	cd "$srcdir/${pkgname%-git}"
+	mkdir -p "$pkgdir/usr/bin"
+    mkdir -p "$pkgdir/etc"
 	cp "scripts/rbbackup.sh" "$pkgdir/usr/bin/rbbackup"
-	cp -a "config/rbbackup.d" "$pkgdir/etc/"
 	cp "config/rbbackup.conf" "$pkgdir/etc/"
+    cd "config/rbbackup.d"
+    find . -type d -exec mkdir -p "$pkgdir/etc/rbbackup.d/{}" \;
+    find . -type f -exec cp "{}" "$pkgdir/etc/rbbackup.d" \;
 }

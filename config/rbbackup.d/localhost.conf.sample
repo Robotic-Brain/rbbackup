@@ -1,0 +1,9 @@
+#!/bin/bash
+
+conf_rsync_source='/'
+conf_rsync_filter='/etc/rbbackup.d/rsync_filter.txt'
+
+#args: <target> <reason> <dryRun> <quiet> <last snapshot> <backup path> <start time> <target root path>
+#conf_pre_backup_f() {}
+#conf_do_backup_f() {}
+#conf_post_backup_f() {}
