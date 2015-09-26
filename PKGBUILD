@@ -8,7 +8,7 @@
 
 # Maintainer: Robotic-Brain <github@roboticbrain.de>
 pkgname=rbbackup-git
-pkgver=0.0.1
+pkgver=0.0.2
 pkgrel=1
 pkgdesc="An incremental backup script"
 arch=('any')
