@@ -169,8 +169,10 @@ function lock_target() {
 
 # args: <snapshot_path>
 function check_backup_structure() {
-    echo "TODO: function: ${FUNCNAME[0]}"
-    false && conf_check_backup_structure_f $@
+    if [ ! -r "$1/info.txt" ]; then
+        return 1
+    fi
+    conf_check_backup_structure_f $@
     return $?
 }
 
@@ -384,7 +386,8 @@ function main() {
     else
 	    if [ -r "$conf_backup_path/lastPath" ]; then
 	        l_last_snapshot=`cat $conf_backup_path/lastPath`
-	        if [ check_backup_structure "$l_last_snapshot" -ne 0 ]; then
+            check_backup_structure "$l_last_snapshot"
+	        if [ $? -ne 0 ]; then
 		        echo "ERROR: $l_last_snapshot does not look like a backup!" >&2
 		        exit 1
 	        fi
