@@ -1,2 +1,3 @@
 Deduplicate common code between tests
 Remove tempdir workaround for initial runs
+Fix shunit dependency
