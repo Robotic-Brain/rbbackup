@@ -28,8 +28,10 @@ md5sums=(
 
 pkgver() {
 	cd "$srcdir/${pkgname%-git}"
-	# TODO: Use alternate method if no tags are available
-	printf "%s" "$(git describe --long --first-parent | sed 's/\([^-]*-\)g/r\1/;s/-/./g')"
+	( set -o pipefail
+		git describe --long --first-parent --match 'v[0-9]*' --dirty 2>/dev/null | sed -re 's/v//;s/-/.r/;s/-/./;s/-/_/;' ||
+		printf "r%s.%s" "$(git rev-list --first-parent --count HEAD)" "$(git rev-parse --short HEAD)"
+	)
 }
 
 check() {
