@@ -5,7 +5,7 @@ if [ $# -gt 0 ]; then
     shopt -s extglob
     GLOBIGNORE='*~'
     
-    export SHUNIT=~/Desktop/shunit2-source/2.1.6/src/shunit2
+    export SHUNIT=./shunit2/shunit2
     #(./tests/*)
 
     echo "Starting Fixture $1..."
