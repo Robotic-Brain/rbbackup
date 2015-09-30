@@ -23,9 +23,15 @@ replaces=()
 backup=('etc/rbbackup.conf' 'etc/rbbackup.d/rsync_filter.txt')
 options=()
 install=
-source=("git+https://github.com/Robotic-Brain/rbbackup.git")
+source=(
+	'git+https://github.com/Robotic-Brain/rbbackup.git'
+	'git+https://github.com/kward/shunit2.git'
+)
 noextract=()
-md5sums=('SKIP')
+md5sums=(
+	'SKIP'
+	'SKIP'
+)
 
 pkgver() {
 	cd "$srcdir/${pkgname%-git}"
@@ -35,6 +41,9 @@ pkgver() {
 
 check() {
 	cd "$srcdir/${pkgname%-git}"
+	git submodule init
+	git config submodule.external/shunit2.url $srcdir/shunit2
+	git submodule update
 	cd scripts
 	./testRunner.sh realRun.sh >/dev/null
 	./testRunner.sh dryRun.sh >/dev/null
