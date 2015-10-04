@@ -156,6 +156,14 @@ function log() {
     fi
 }
 
+# makes sure the backup only runs as root
+function check_root() {
+    if [ $EUID -ne 0 ]; then
+        echo "Must run as root!" >&2
+        exit 3
+    fi
+}
+
 function lock_target() {
     log "Locking Target..."
     readonly conf_backup_path
@@ -383,6 +391,7 @@ function main() {
         exit 2
     fi
     
+    check_root
     lock_target
     
     # get snapshot params:
