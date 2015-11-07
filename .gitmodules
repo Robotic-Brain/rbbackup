@@ -1,3 +1,0 @@
-[submodule "external/shunit2"]
-	path = external/shunit2
-	url = https://github.com/kward/shunit2.git
