@@ -1,4 +1,5 @@
 from behave import *
+import parse
 
 class StepOrderError(Exception):
     """
@@ -27,14 +28,24 @@ def step_impl(context):
                              )
     context.data['executed'] = True
 
-@then(u'Stdout should contain "{text}"')
-def step_impl(context, text):
-    actual = context.data['result'].stdout
+@parse.with_pattern(r"(?i)stdout|stderr")
+def parse_OStreamType(text):
+    """
+    Returns false if text is STDERR true if STDOUT
+    """
+    return text.upper() == "STDOUT"
+
+register_type(OStream=parse_OStreamType)
+
+@then(u'{stdout:OStream} should contain "{text}"')
+def step_impl(context, stdout, text):
+    streamName = 'STDOUT' if stdout else 'STDERR'
+    actual = context.data['result'].stdout if stdout else context.data['result'].stderr
     assert text in actual, (
             "Actual output: \n"+
-            "----- BEGIN STDOUT -----\n"+
+            "----- BEGIN "+streamName+" -----\n"+
             actual+
-            "------ END STDOUT ------"
+            "------ END "+streamName+" ------"
         )
 
 @then(u'Stdout should contain the actual version')
