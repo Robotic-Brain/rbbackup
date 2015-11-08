@@ -3,8 +3,8 @@ from behave import *
 @given(u'there is an argument "{arg}"')
 def step_impl(context, arg):
     if context.data['executed']:
-        raise StepOrderError('Setting arguments after programm invokation has no effect!')
-        
+        raise StepOrderError('Setting arguments after programm invocation has no effect!')
+
     context.data['arguments'].append(arg)
 
 @when(u'I run trough a terminal')
