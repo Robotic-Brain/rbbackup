@@ -1,5 +1,11 @@
 from behave import *
 
+class StepOrderError(Exception):
+    """
+    This error is raised if 2 or more steps need to be executed in a specific order
+    """
+    pass
+
 @given(u'there is an argument "{arg}"')
 def step_impl(context, arg):
     if context.data['executed']:
