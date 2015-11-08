@@ -15,11 +15,27 @@ def step_impl(context, arg):
 
 @when(u'I run trough a terminal')
 def step_impl(context):
-    raise NotImplementedError(u'STEP: When I run trough a terminal')
+    import subprocess
+    command = ['python', context.data['module_path']] + context.data['arguments']
+    context.data['result'] = subprocess.run(
+                                command,
+                                input=context.data['stdin'],
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
+                                timeout=context.data['run_timeout'],
+                                universal_newlines=context.data['textmode']
+                             )
+    context.data['executed'] = True
 
 @then(u'Stdout should contain "{text}"')
 def step_impl(context, text):
-    raise NotImplementedError(u'STEP: Then Stdout should contain "'+text+u'"')
+    actual = context.data['result'].stdout
+    assert text in actual, (
+            "Actual output: \n"+
+            "----- BEGIN STDOUT -----\n"+
+            actual+
+            "------ END STDOUT ------"
+        )
 
 @then(u'Stdout should contain the actual version')
 def step_impl(context):
@@ -27,4 +43,5 @@ def step_impl(context):
 
 @then(u'the exit code should be {code:d}')
 def step_impl(context, code):
-    raise NotImplementedError(u'STEP: Then the exit code should be '+code)
+    actual = context.data['result'].returncode
+    assert code == actual, "Actual code: "+str(actual)
