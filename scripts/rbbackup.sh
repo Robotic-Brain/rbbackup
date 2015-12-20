@@ -224,7 +224,7 @@ function do_backup() {
         l_rsync+=' --log-file='"$6/rsync.log"
     fi
     $l_rsync -s --delete-delay --partial --partial-dir="$8/partial" --numeric-ids -SaHAXcyy --temp-dir="$8/temp" --write-batch="$6/rsbatch" --filter='. '"$conf_rsync_filter" --link-dest="$5/fs/" "$conf_rsync_source" "$6/fs"
-    return $?
+    return 0
 }
 
 # args: <target> <reason> <dry> <quiet> <last_snap_path> <this_snap_path> <time_start> <target_root>
